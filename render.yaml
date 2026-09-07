@@ -1,0 +1,65 @@
+# Render blueprint for elo.
+#
+# Free-tier caveats you are accepting by using this file:
+#   * Free Postgres expires 30 days after creation, then is deleted after a
+#     14-day grace period. Upgrade or export before then.
+#   * Free web services spin down after 15 minutes idle (~1 min cold start).
+#   * The FAISS index lives on the instance's ephemeral disk, so it is lost on
+#     every restart and the site must be re-crawled. Add a paid disk, or switch
+#     VECTOR_STORE_PROVIDER to a hosted store, if that matters.
+
+services:
+  - type: web
+    name: elo
+    runtime: python
+    plan: free
+    region: oregon          # must match the database region below
+    rootDir: backend
+    buildCommand: pip install -r requirements-render.txt
+    startCommand: python -m app.database.migrate && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/admin/health
+    envVars:
+      - key: POSTGRES_URL
+        fromDatabase:
+          name: elo-db
+          property: connectionString
+      - key: PYTHON_VERSION
+        value: "3.12.3"
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+      - key: POSTGRES_AUTO_MIGRATE
+        value: "false"      # migrations run in startCommand instead
+      - key: POSTGRES_POOL_MAX_SIZE
+        value: "5"          # free Postgres has a low connection ceiling
+      - key: JWT_SECRET
+        generateValue: true
+      # API-based providers: no PyTorch, fits in 512MB.
+      - key: LLM_PROVIDER
+        value: openai
+      - key: LLM_MODEL
+        value: gpt-4o-mini
+      - key: EMBEDDINGS_PROVIDER
+        value: openai
+      - key: EMBEDDINGS_MODEL
+        value: text-embedding-3-small
+      # Set these in the Render dashboard, not here.
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # Fill in with your real URL after the first deploy.
+      - key: SITE_URL
+        sync: false
+      - key: TRUSTED_HOSTS
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
+
+databases:
+  - name: elo-db
+    plan: free
+    region: oregon

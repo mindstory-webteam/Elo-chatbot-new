@@ -1,0 +1,42 @@
+# Slim dependency set for memory-constrained hosts (Render free tier, 512MB RAM).
+#
+# Differs from requirements.txt in one way: sentence-transformers is omitted,
+# which drops PyTorch (~2GB installed, and more RAM than a free instance has).
+# Embeddings and the LLM are therefore API-based -- set in the environment:
+#   EMBEDDINGS_PROVIDER=openai
+#   LLM_PROVIDER=openai
+#   OPENAI_API_KEY=sk-...
+
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.5.3
+pydantic-settings>=2.1.0
+email-validator>=2.0.0
+python-dotenv>=1.0.0
+
+langchain>=0.2.0
+langchain-community>=0.2.0
+langchain-text-splitters>=0.2.0
+langchain-openai>=0.1.0
+
+faiss-cpu>=1.7.4
+
+asyncpg>=0.29.0
+
+beautifulsoup4>=4.12.3
+aiohttp>=3.9.3
+tenacity>=8.2.3
+slowapi>=0.1.9
+httpx>=0.26.0
+pytz>=2024.1
+apscheduler>=3.10.4
+
+pypdf>=4.0.0
+docx2txt>=0.8
+aiofiles>=23.2.1
+
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.6
+
+loguru>=0.7.2
