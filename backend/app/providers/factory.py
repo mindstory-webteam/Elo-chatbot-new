@@ -28,7 +28,8 @@ def get_llm():
             model=settings.LLM_MODEL,
             api_key=settings.OPENAI_API_KEY,
             temperature=settings.LLM_TEMPERATURE,
-            max_tokens=settings.LLM_MAX_TOKENS
+            max_tokens=settings.LLM_MAX_TOKENS,
+            base_url=settings.OPENAI_BASE_URL or None
         )
     
     elif provider == "anthropic":
@@ -78,11 +79,18 @@ def get_embeddings():
     
     if provider == "openai":
         from langchain_openai import OpenAIEmbeddings
-        if not settings.OPENAI_API_KEY:
-            raise ValueError("OPENAI_API_KEY is required for OpenAI embeddings")
+        if not settings.embeddings_api_key:
+            raise ValueError(
+                "EMBEDDINGS_API_KEY (or OPENAI_API_KEY) is required for OpenAI embeddings"
+            )
+        _emb_base = settings.embeddings_base_url
         return OpenAIEmbeddings(
             model=settings.EMBEDDINGS_MODEL,
-            api_key=settings.OPENAI_API_KEY
+            api_key=settings.embeddings_api_key,
+            base_url=_emb_base,
+            # Third-party OpenAI-compatible endpoints don't expose OpenAI's
+            # token-counting behaviour, so skip the tiktoken-based batching.
+            check_embedding_ctx_length=not bool(_emb_base)
         )
     
     elif provider == "huggingface":

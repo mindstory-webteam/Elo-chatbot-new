@@ -80,6 +80,30 @@ class Settings(BaseSettings):
     
     # Provider-specific API keys
     OPENAI_API_KEY: Optional[str] = None
+    # Point the OpenAI-compatible client at a different provider. Leave unset
+    # for OpenAI itself. Examples:
+    #   Google Gemini: https://generativelanguage.googleapis.com/v1beta/openai/
+    #   Mistral:       https://api.mistral.ai/v1
+    #   Groq (chat only, no embeddings): https://api.groq.com/openai/v1
+    OPENAI_BASE_URL: Optional[str] = None
+
+    # Embeddings can come from a DIFFERENT provider than chat. Useful because
+    # some chat providers (DeepSeek, Groq) have no embeddings endpoint at all.
+    # Both fall back to the OPENAI_* values above when unset.
+    EMBEDDINGS_API_KEY: Optional[str] = None
+    EMBEDDINGS_BASE_URL: Optional[str] = None
+
+    @property
+    def embeddings_api_key(self) -> Optional[str]:
+        return self.EMBEDDINGS_API_KEY or self.OPENAI_API_KEY
+
+    @property
+    def embeddings_base_url(self) -> Optional[str]:
+        if self.EMBEDDINGS_API_KEY:
+            # A dedicated embeddings key implies a dedicated endpoint; don't
+            # silently inherit the chat provider's URL.
+            return self.EMBEDDINGS_BASE_URL or None
+        return self.EMBEDDINGS_BASE_URL or self.OPENAI_BASE_URL or None
     ANTHROPIC_API_KEY: Optional[str] = None
     AZURE_OPENAI_ENDPOINT: Optional[str] = None
     AZURE_OPENAI_API_KEY: Optional[str] = None

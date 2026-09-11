@@ -18,7 +18,7 @@ import numpy as np
 
 from app.config import settings
 from app.database import get_database, get_vector_store
-from app.services.ollama import get_ollama_service
+from app.services.llm_service import get_llm_service
 from app.models.schemas import ChatResponse, SourceDocument
 
 
@@ -34,7 +34,8 @@ class RAGEngine:
     QA_MATCH_THRESHOLD = 0.85  # Confidence threshold for using Q&A pair directly
     
     def __init__(self):
-        self.ollama = get_ollama_service()
+        # Honours LLM_PROVIDER; falls back to Ollama when that's configured.
+        self.ollama = get_llm_service()
         self.vector_store = get_vector_store()
         self._qa_cache: Dict[str, List[Dict]] = {}  # Cache Q&A pairs by site_id
         self._qa_embeddings_cache: Dict[str, List[Tuple[str, List[float]]]] = {}  # Cache Q&A embeddings
