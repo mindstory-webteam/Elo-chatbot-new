@@ -13,7 +13,7 @@ Provider Architecture:
 """
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
+from app.core.cors import SiteAwareCORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
@@ -158,9 +158,10 @@ if settings.is_production and settings.TRUSTED_HOSTS != "*":
         allowed_hosts=settings.trusted_hosts_list
     )
 
-# 4. CORS middleware - using configurable origins
+# 4. CORS middleware - configured origins PLUS any site registered in the
+#    dashboard, so adding a site does not require editing .env.
 app.add_middleware(
-    CORSMiddleware,
+    SiteAwareCORSMiddleware,
     allow_origins=settings.cors_origins_list,
     allow_origin_regex=settings.cors_origin_regex,
     allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
