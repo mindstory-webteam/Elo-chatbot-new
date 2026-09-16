@@ -10564,3 +10564,139 @@ body.admin-password-gate-active .app {
         }
     }
 }
+
+/* ==========================================================================
+   Responsive hardening
+   --------------------------------------------------------------------------
+   Appended last so these win on cascade order without editing the rules
+   above. Everything here is scoped to a media query, so desktop layout is
+   untouched. The dashboard's three-column shell (nav sidebar | site list |
+   detail panel) plus the detail panel's own three columns (settings nav |
+   form | live preview) is what runs out of horizontal room first.
+   ========================================================================== */
+
+/* ---------- Tablet: 1024px and below ---------- */
+@media (max-width: 1024px) {
+    /* The live preview is the least critical column; drop it below the form
+       rather than squeezing all three. */
+    .detail-settings-layout {
+        flex-wrap: wrap;
+    }
+    .appearance-preview,
+    .widget-preview-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        order: 3;
+        border-left: none;
+        border-top: 1px solid var(--line, #e5e7eb);
+    }
+}
+
+/* ---------- Mobile: 768px and below ---------- */
+@media (max-width: 768px) {
+    /* Stack the detail panel's columns. */
+    .detail-settings-layout {
+        flex-direction: column;
+        overflow: visible;
+    }
+
+    /* The settings nav becomes a horizontal scroller instead of a sidebar. */
+    .detail-settings-nav {
+        width: 100% !important;
+        flex-shrink: 1;
+        display: flex;
+        flex-direction: row;
+        gap: 0.25rem;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        border-right: none;
+        border-bottom: 1px solid var(--line, #e5e7eb);
+        padding: 0.5rem;
+    }
+    .detail-settings-nav::-webkit-scrollbar { display: none; }
+
+    /* Group labels ("WIDGET", "AI & CONTENT") only make sense in a column. */
+    .detail-nav-group-label { display: none; }
+    .detail-nav-group {
+        display: flex;
+        flex-direction: row;
+        gap: 0.25rem;
+    }
+    .detail-settings-nav .detail-nav-item,
+    .detail-settings-nav a,
+    .detail-settings-nav button {
+        white-space: nowrap;
+        width: auto !important;
+        flex-shrink: 0;
+    }
+
+    .detail-settings-content,
+    .detail-content {
+        width: 100%;
+        min-width: 0;          /* lets flex children shrink instead of overflow */
+        overflow-x: hidden;
+    }
+
+    /* Header actions wrap rather than pushing the title off-screen. */
+    .detail-header {
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+    .detail-header-actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    /* Stat cards: 2 per row instead of 4 across. */
+    .detail-quick-actions,
+    .stat-grid,
+    .stats-row {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.5rem;
+    }
+
+    /* Any wide content scrolls inside itself, never the page body. */
+    table,
+    .data-table,
+    .embed-code-preview,
+    pre {
+        display: block;
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Inputs must never force horizontal page scroll. */
+    input, textarea, select, .form-control {
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+
+    /* iOS zooms the page when a focused input is under 16px. */
+    input, textarea, select {
+        font-size: 16px;
+    }
+}
+
+/* ---------- Small phones: 480px and below ---------- */
+@media (max-width: 480px) {
+    .detail-quick-actions,
+    .stat-grid,
+    .stats-row {
+        grid-template-columns: 1fr;
+    }
+    .detail-header-actions {
+        flex-wrap: wrap;
+    }
+    .detail-header-actions > * {
+        flex: 1 1 auto;
+    }
+}
+
+/* Belt-and-braces: nothing should ever scroll the page sideways. */
+@media (max-width: 768px) {
+    html, body { max-width: 100%; overflow-x: hidden; }
+}

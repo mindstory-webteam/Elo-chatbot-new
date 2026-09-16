@@ -65,7 +65,7 @@ class CrawlerService:
         
         async with aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=30),
-            headers={"User-Agent": "elo-Crawler/1.0"}
+            headers={"User-Agent": "Mozilla/5.0 (compatible; elo-Crawler/1.0; +https://myndpixel.com)"}
         ) as session:
             while queue and len(self.pages) < max_pages:
                 # Get next URL
