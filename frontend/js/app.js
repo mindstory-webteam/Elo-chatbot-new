@@ -7750,11 +7750,11 @@ function getLeadsTabContent() {
                     <table class="leads-table">
                         <thead>
                             <tr>
-                                <th>Email</th>
-                                <th>Name</th>
+                                <th style="width:70px">Score</th>
+                                <th>Contact</th>
+                                <th>Wants</th>
                                 <th>Captured</th>
-                                <th>Source</th>
-                                <th></th>
+                                <th style="width:40px"></th>
                             </tr>
                         </thead>
                         <tbody id="leads-tbody">
@@ -7895,7 +7895,7 @@ async function loadLeads() {
 function renderLeadsTable() {
     const tbody = document.getElementById('leads-tbody');
     if (!tbody) return;
-    
+
     if (!leadsState.leads || leadsState.leads.length === 0) {
         tbody.innerHTML = `
             <tr class="leads-empty">
@@ -7904,28 +7904,74 @@ function renderLeadsTable() {
         `;
         return;
     }
-    
-    tbody.innerHTML = leadsState.leads.map(lead => {
-        const capturedAt = lead.captured_at ? formatRelativeTime(new Date(lead.captured_at)) : 'Unknown';
-        const source = lead.source || 'chat';
-        
+
+    // Hottest first: a sales team works top-down, so ordering is the feature.
+    const leads = [...leadsState.leads].sort(
+        (a, b) => (b.metadata?.score || 0) - (a.metadata?.score || 0)
+    );
+
+    const esc = (v) => String(v == null ? '' : v)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+
+    tbody.innerHTML = leads.map(lead => {
+        const m = lead.metadata || {};
+        const score = m.score ?? null;
+        const band = m.band || (score >= 70 ? 'hot' : score >= 40 ? 'warm' : 'cold');
+        const captured = lead.captured_at
+            ? formatRelativeTime(new Date(lead.captured_at)) : 'Unknown';
+
+        // Phone is the number they expect a call on, so lead with it.
+        const contactLines = [];
+        if (m.phone) contactLines.push(`<a href="tel:${esc(m.phone)}">${esc(m.phone)}</a>`);
+        if (lead.email) contactLines.push(`<a href="mailto:${esc(lead.email)}">${esc(lead.email)}</a>`);
+        const contact = contactLines.length
+            ? contactLines.join('<br>') : '<span class="text-muted">—</span>';
+
+        const wants = m.product || m.intent || '<span class="text-muted">—</span>';
+
+        // Only render the detail row when there is something to show.
+        const details = [
+            ['Budget', m.budget], ['Timeline', m.timeline],
+            ['Objection', m.objection], ['Location', m.location],
+        ].filter(([, v]) => v);
+
+        const detailRow = (details.length || m.summary) ? `
+            <tr class="lead-detail-row" id="lead-detail-${esc(lead.id)}" hidden>
+                <td colspan="5">
+                    ${m.summary ? `<p class="lead-summary">${esc(m.summary)}</p>` : ''}
+                    <div class="lead-detail-grid">
+                        ${details.map(([k, v]) =>
+                            `<div><span class="lead-detail-label">${k}</span>${esc(v)}</div>`
+                        ).join('')}
+                    </div>
+                    ${lead.name ? `<div class="lead-detail-name">Name: ${esc(lead.name)}</div>` : ''}
+                </td>
+            </tr>` : '';
+
         return `
-            <tr data-lead-id="${lead.id}">
-                <td>${lead.email || '<span class="text-muted">—</span>'}</td>
-                <td>${lead.name || '<span class="text-muted">—</span>'}</td>
-                <td>${capturedAt}</td>
-                <td><span class="lead-source-badge ${source}">${source}</span></td>
+            <tr data-lead-id="${esc(lead.id)}" class="lead-row" onclick="toggleLeadDetail('${esc(lead.id)}')">
+                <td><span class="lead-score lead-score-${band}" title="${band}">${score ?? '–'}</span></td>
+                <td>${contact}</td>
+                <td>${wants}</td>
+                <td>${captured}</td>
                 <td>
-                    <button class="btn btn-icon btn-danger-ghost" onclick="deleteLead('${lead.id}')" title="Delete">
+                    <button class="btn btn-icon btn-danger-ghost"
+                            onclick="event.stopPropagation(); deleteLead('${esc(lead.id)}')" title="Delete">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="3 6 5 6 21 6"/>
                             <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
                         </svg>
                     </button>
                 </td>
-            </tr>
+            </tr>${detailRow}
         `;
     }).join('');
+}
+
+function toggleLeadDetail(leadId) {
+    const row = document.getElementById(`lead-detail-${leadId}`);
+    if (row) row.hidden = !row.hidden;
 }
 
 function updateLeadsPagination() {

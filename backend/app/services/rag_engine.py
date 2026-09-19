@@ -19,6 +19,7 @@ import numpy as np
 from app.config import settings
 from app.database import get_database, get_vector_store
 from app.services.llm_service import get_llm_service
+from app.services.lead_extractor import capture_lead_from_conversation
 from app.models.schemas import ChatResponse, SourceDocument
 
 
@@ -261,7 +262,23 @@ class RAGEngine:
                 sources=[s.dict() for s in sources],
                 site_id=site_id
             )
-            
+
+            # 11. Capture the visitor's contact details if they shared any.
+            #     Runs after the reply is composed so a failure here can never
+            #     delay or break the answer.
+            if site_id:
+                try:
+                    history = await db.get_conversation_history(session_id, limit=50)
+                    await capture_lead_from_conversation(
+                        db=db,
+                        llm_service=self.ollama,
+                        site_id=site_id,
+                        session_id=session_id,
+                        messages=history,
+                    )
+                except Exception as e:
+                    logger.warning(f"Lead capture skipped: {e}")
+
             return ChatResponse(
                 answer=answer,
                 sources=sources,

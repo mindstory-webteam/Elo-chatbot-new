@@ -10700,3 +10700,61 @@ body.admin-password-gate-active .app {
 @media (max-width: 768px) {
     html, body { max-width: 100%; overflow-x: hidden; }
 }
+
+/* ==========================================================================
+   Lead intelligence — score badge and expandable detail row
+   ========================================================================== */
+.lead-row { cursor: pointer; }
+.lead-row:hover { background: var(--bg-hover, #f8fafc); }
+
+.lead-score {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    padding: 0.2rem 0.45rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+}
+/* Colour carries the same meaning as the number, but the number is always
+   present so the band is never conveyed by colour alone. */
+.lead-score-hot   { background: #fee2e2; color: #b91c1c; }
+.lead-score-warm  { background: #fef3c7; color: #b45309; }
+.lead-score-cold  { background: #e5e7eb; color: #4b5563; }
+
+.lead-detail-row > td {
+    background: var(--bg-subtle, #f8fafc);
+    padding: 0.75rem 1rem 1rem;
+}
+.lead-summary {
+    margin: 0 0 0.6rem;
+    font-style: italic;
+    color: var(--text-secondary, #475569);
+}
+.lead-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.5rem 1.25rem;
+    font-size: 0.875rem;
+}
+.lead-detail-label {
+    display: block;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted, #94a3b8);
+}
+.lead-detail-name {
+    margin-top: 0.6rem;
+    font-size: 0.875rem;
+    color: var(--text-secondary, #475569);
+}
+
+@media (max-width: 768px) {
+    /* Drop the lowest-value column first so contact and score survive. */
+    .leads-table th:nth-child(3),
+    .leads-table td:nth-child(3) { display: none; }
+    .lead-detail-grid { grid-template-columns: 1fr; }
+}
